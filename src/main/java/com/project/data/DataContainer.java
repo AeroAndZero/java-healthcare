@@ -1,5 +1,12 @@
 package com.project.data;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -21,35 +28,54 @@ public class DataContainer {
     };
 
     public DataContainer(){
-        /*
-         * @Marmik
-         * Read from file
-         * Change below code
-         */
         patients = new ArrayList<>();
         appointments = new ArrayList<>();
 
-        // Demo data -- Remove this if you want
-        patients.add(new Patient(0, "Ayush", 21, 80, 179, 12345, "Vaughan", "Covid"));
-        patients.add(new Patient(1, "Marmik", 22,  64, 182, 12345, "Brampton", "Covid"));
-        patients.add(new Patient(2, "Hemang", 23,  78, 165, 12345, "Mississauga", "Covid"));
-        patients.add(new Patient(3, "Bro", 19,  55, 182, 12345, "Toronto", "Covid"));
+        // Load data from files
+        loadPatients();
+        loadAppointments();
+    }
+    
+    public static void saveAppointments() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("appointments.dat"))) {
+            oos.writeObject(appointments);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    /*
-    * @Marmik
-    * This function will save data everytime it is called
-    * Write code to save data to a binary file below
-    * both saveAppointments and savePatients function
-    */
-    public static void saveAppointments(){
-        
+    public static void savePatients() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("patients.dat"))) {
+            oos.writeObject(patients);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void savePatients(){
-        
+    @SuppressWarnings("unchecked")
+    public static void loadAppointments() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("appointments.dat"))) {
+            appointments = (ArrayList<Appointment>) ois.readObject();
+        } catch (FileNotFoundException e) {
+            // File does not exist, initialize with empty list
+            appointments = new ArrayList<>();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
+    @SuppressWarnings("unchecked")
+    public static void loadPatients() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("patients.dat"))) {
+            patients = (ArrayList<Patient>) ois.readObject();
+        } catch (FileNotFoundException e) {
+            // File does not exist, initialize with empty list
+            patients = new ArrayList<>();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
     // For Patiends
     public static ArrayList<Patient> getPatients(){
         return patients;
@@ -59,7 +85,9 @@ public class DataContainer {
         patients.add(patient);
     }
 
-    public static void addPatient(int id, String name, int age, int weight, int height, long phone, String address, String medicalHistory){
+    public static void addPatient(String name, int age, int weight, int height, long phone, String address, String medicalHistory){
+        int id = 0;
+        if(patients.size() > 0) id = patients.get(patients.size()-1).getId()+1;
         Patient patient = new Patient(id, name, age, weight, height, phone, address, medicalHistory);
         patients.add(patient);
 
@@ -87,7 +115,14 @@ public class DataContainer {
     }
 
     public static void editPatient(int id, Patient patient){
-        patients.set(id, patient);
+        int i = 0;
+        for(int j = 0; j < patients.size(); j++){
+            if(patients.get(j).getId() == id){
+                i = j;
+                break;
+            }
+        }
+        patients.set(i, patient);
     }
 
     public static void deletePatient(int id){
@@ -124,10 +159,12 @@ public class DataContainer {
         Date current = new Date();
         for(Appointment p : appointments){
             if(Math.abs(current.getTime() - p.datetime.getTime()) < timeDiff){
-                timeDiff = Math.abs(current.getTime() - p.datetime.getTime());
+                timeDiff = p.datetime.getTime() - current.getTime();
             }
         }
     
+        if(timeDiff < 0) return "Never";
+
         long mins = (timeDiff / 60000);
         if(mins >= 60){
             mins /= 60;
@@ -160,5 +197,10 @@ public class DataContainer {
 
     public static ObservableList<String> getDoctorsProperty(){
         return FXCollections.observableArrayList(doctors);
+    }
+
+    // For others
+    public static String getDateTimeString(Date datetime){
+        return (new SimpleDateFormat("h:mm a dd/LLL/yyyy")).format(datetime);
     }
 }

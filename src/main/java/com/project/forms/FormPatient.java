@@ -150,12 +150,9 @@ public class FormPatient extends Application{
             String medicalHistory = ((TextArea)vboxMedicalHistory.control2).getText();
 
             if(patient == null){
-                int id = DataContainer.getPatients().size() + 1;
-
-                DataContainer.addPatient(id, name, age, weight, height, phone, address, medicalHistory);
+                DataContainer.addPatient(name, age, weight, height, phone, address, medicalHistory);
             }else{
                 Patient newPatient = new Patient(patient.getId(), name, age, weight, height, phone, address, medicalHistory);
-
                 DataContainer.editPatient(patient.getId(), newPatient);
             }
 
@@ -168,7 +165,8 @@ public class FormPatient extends Application{
 
     @Override
     public void start(Stage stage) {     
-        this.stage = stage;   
+        this.stage = stage;
+        this.stage.setAlwaysOnTop(true);
         this.stage.setScene(PatientRecord);
         this.stage.initStyle(StageStyle.UTILITY);
         this.stage.setTitle("Patient Record");

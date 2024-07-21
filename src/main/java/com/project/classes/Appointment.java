@@ -1,5 +1,6 @@
 package com.project.classes;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -10,7 +11,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableObjectValue;
 
-public class Appointment {
+public class Appointment implements Serializable{
     public int id;
     public Date datetime;
     public Patient patient;

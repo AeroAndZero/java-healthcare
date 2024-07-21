@@ -1,11 +1,13 @@
 package com.project.classes;
 
+import java.io.Serializable;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 
-public class Patient {
+public class Patient implements Serializable {
     int id;
     String name;
     int age;

@@ -178,7 +178,8 @@ public class FormAppointment extends Application {
 
     @Override
     public void start(Stage stage) {
-        this.stage = stage;   
+        this.stage = stage;
+        this.stage.setAlwaysOnTop(true);
         this.stage.setScene(AppointmentRecord);
         this.stage.initStyle(StageStyle.UTILITY);
         this.stage.setTitle("Appointment Record");
