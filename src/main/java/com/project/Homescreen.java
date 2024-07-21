@@ -19,9 +19,11 @@ public class Homescreen extends Application {
         // Creating Tabular view for two screens
         Tab tabAppointments = new Tab("Appointments", appointmentTab);
         tabAppointments.setClosable(false);
+        tabAppointments.setOnSelectionChanged(e -> {appointmentTab.renderAppointments(); System.out.println("Refreshed");});
         
         Tab tabPatients = new Tab("Patients", patientTab);
         tabPatients.setClosable(false);
+        tabPatients.setOnSelectionChanged(e -> {patientTab.renderPatients(); System.out.println("Refreshed");});
         
         TabPane tabPane = new TabPane();
         tabPane.getTabs().add(tabAppointments);
