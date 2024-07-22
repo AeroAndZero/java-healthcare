@@ -36,6 +36,10 @@ public class DataContainer {
         loadAppointments();
     }
     
+    /*
+    * Task - 2 (Saveing and reading from file) is done below
+    * by @Marmik Patel
+    */
     public static void saveAppointments() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("appointments.dat"))) {
             oos.writeObject(appointments);
@@ -52,7 +56,6 @@ public class DataContainer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static void loadAppointments() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("appointments.dat"))) {
             appointments = (ArrayList<Appointment>) ois.readObject();
@@ -64,7 +67,6 @@ public class DataContainer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static void loadPatients() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("patients.dat"))) {
             patients = (ArrayList<Patient>) ois.readObject();
@@ -191,7 +193,7 @@ public class DataContainer {
             appointments.remove(i);
     }
 
-    // Doctors
+    // For Doctors
     public static String[] getDoctors(){
         return doctors;
     }

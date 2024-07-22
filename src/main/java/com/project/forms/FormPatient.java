@@ -136,31 +136,87 @@ public class FormPatient extends Application{
     }
     
     public void attachEvents(){
+        /*
+        * Task - 3 (Handling IOException) is done below
+        * by @Hemang Patel
+        */
         btnSave.setOnAction(e -> {
-            /*
-            * @Hemang
-            * Handle exception on below form fields
-            */
-            String name = ((TextField)hboxName.control2).getText();
-            int age = Integer.parseInt(((TextField)hboxAge.control2).getText());
-            int weight = Integer.parseInt(((TextField)hboxWeight.control2).getText());
-            int height = Integer.parseInt(((TextField)hboxHeight.control2).getText());
-            long phone = Long.parseLong(((TextField)hboxPhone.control2).getText());
-            String address = ((TextArea)vboxAddress.control2).getText();
-            String medicalHistory = ((TextArea)vboxMedicalHistory.control2).getText();
+            try {
+                String name = ((TextField)hboxName.control2).getText();
+                int age = 0;
+                int weight = 0;
+                int height = 0;
+                long phone = 0;
+                String address = ((TextArea)vboxAddress.control2).getText();
+                String medicalHistory = ((TextArea)vboxMedicalHistory.control2).getText();
 
-            if(patient == null){
-                DataContainer.addPatient(name, age, weight, height, phone, address, medicalHistory);
-            }else{
-                Patient newPatient = new Patient(patient.getId(), name, age, weight, height, phone, address, medicalHistory);
-                DataContainer.editPatient(patient.getId(), newPatient);
+                // Validation
+                if(name.trim().equals("")){
+                    System.out.println("Name should not be empty");
+                    return;
+                }
+
+                try {
+                    age = Integer.parseInt(((TextField)hboxAge.control2).getText());
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid Age format. Enter a valid number: " + ex);
+                    return;
+                }
+
+                try {
+                    weight = Integer.parseInt(((TextField)hboxWeight.control2).getText());
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid Weight format. Enter a valid number: " + ex);
+                    return;
+                }
+
+                try {
+                    height = Integer.parseInt(((TextField)hboxHeight.control2).getText());
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid Height format. Enter a valid number: " + ex);
+                    return;
+                }
+
+                try {
+                    phone = Long.parseLong(((TextField)hboxPhone.control2).getText());
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid Phone format. Enter a valid number: " + ex);
+                    return;
+                }
+
+                if (name.isEmpty() || address.isEmpty() || medicalHistory.isEmpty()) {
+                    System.out.println("Please fill in all the required fields.");
+                    return;
+                }
+
+                // Saving the patient
+                if(patient == null){
+                    try {
+                        DataContainer.addPatient(name, age, weight, height, phone, address, medicalHistory);
+                    } catch (Exception ex) {
+                        System.out.println("Error while adding patient: " + ex);
+                        return;
+                    }
+                } else {
+                    try {
+                        Patient newPatient = new Patient(patient.getId(), name, age, weight, height, phone, address, medicalHistory);
+                        DataContainer.editPatient(patient.getId(), newPatient);
+                    } catch (Exception ex) {
+                        System.out.println("Error while editing patient: " + ex);
+                        return;
+                    }
+                }
+
+                patientTab.renderPatients();
+                stage.close();
+            } catch (Exception ex) {
+                System.out.println("An unexpected error occurred: " + ex);
             }
-
-            patientTab.renderPatients();
-            stage.close();
         });
 
-        btnCancel.setOnAction(e -> {stage.close();});
+        btnCancel.setOnAction(e -> {
+            stage.close();
+        });
     }
 
     @Override

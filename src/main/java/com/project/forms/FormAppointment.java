@@ -125,55 +125,89 @@ public class FormAppointment extends Application {
     }
 
     public void attachEvents(){
+        /*
+        * Task - 3 (Handling IOException) is done below
+        * by @Hemang Patel
+        */
         btnSave.setOnAction(e -> {
-            /*
-            * @Hemang
-            * Handle exception on below form fields
-            */
-            // Patient ID
-            int patientId = Integer.parseInt(((TextField)hboxPatientID.control2).getText());
+            try {
+                // Patient ID
+                int patientId = 0;
+                try {
+                    patientId = Integer.parseInt(((TextField)hboxPatientID.control2).getText());
+                    if(DataContainer.getPatientById(patientId) == null){
+                        throw new Exception("Patient does not exist");
+                    }
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid patient ID: " + ex);
+                    return;
+                } catch (Exception ex){
+                    System.out.println("Patient with that ID does not exist: " +ex);
+                    return;
+                }
 
-            // Time and date field
-            String timeStr = ((TextField)vboxTime.control2).getText();
-            LocalDate localDate = ((DatePicker)vboxDate.control2).getValue();
-            timeStr += " " + localDate.getDayOfMonth() + "-" + localDate.getMonth() + "-" + localDate.getYear();
+                // Time and date field
+                String timeStr = ((TextField)vboxTime.control2).getText();
+                LocalDate localDate = ((DatePicker)vboxDate.control2).getValue();
+                timeStr += " " + localDate.getDayOfMonth() + "-" + localDate.getMonth() + "-" + localDate.getYear();
 
-            SimpleDateFormat format = new SimpleDateFormat("hh:mm a dd-LLLL-yyyy");
-            Date datetime = new Date();
-            try{
-                datetime= format.parse(timeStr);
-            }catch(Exception ex){
-                System.out.println("Time format should be hh:mm a: " + ex);
-            }
-            
-            // Agenda Field
-            String agenda = ((TextArea)vboxAgenda.control2).getText();
+                SimpleDateFormat format = new SimpleDateFormat("hh:mm a dd-LLLL-yyyy");
+                Date datetime = new Date();
+                try {
+                    datetime = format.parse(timeStr);
+                } catch (Exception ex) {
+                    System.out.println("Invalid time format. Time format should be hh:mm a: " + ex);
+                    return;
+                }
 
-            // Doctor Field
-            String dr = ((ComboBox<String>)vboxDoctor.control2).getValue();
+                // Agenda Field
+                String agenda = ((TextArea)vboxAgenda.control2).getText();
 
-            // Saving if new
-            if(appointment == null){
-                    
-                if(!DataContainer.doesPatientExist(patientId)){
-                    System.out.println("Patient does not exist");
+                if(agenda.trim().equals("")){
+                    System.out.println("Agenda should not be empty");
+                    return;
+                }
+
+                // Doctor Field
+                String dr = ((ComboBox<String>)vboxDoctor.control2).getValue();
+
+                // Saving if new
+                if (appointment == null) {
+                    try {
+                        if (!DataContainer.doesPatientExist(patientId)) {
+                            System.out.println("Patient does not exist");
+                            return;
+                        }
+
+                        DataContainer.addAppointment(patientId, datetime, agenda, dr);
+                    } catch (Exception ex) {
+                        System.out.println("Error while adding appointment: " + ex);
+                        return;
+                    }
                 }
                 
-                DataContainer.addAppointment(patientId, datetime, agenda, dr);
-            }
-            
-            // Editing if exists
-            else{
-                Appointment newAppt = new Appointment(appointment.getId(), datetime, DataContainer.getPatientById(patientId), agenda, dr);
-                DataContainer.editAppointment(appointment.getId(), newAppt);
-            }
+                // Editing if exists
+                else {
+                    try {
+                        Appointment newAppt = new Appointment(appointment.getId(), datetime, DataContainer.getPatientById(patientId), agenda, dr);
+                        DataContainer.editAppointment(appointment.getId(), newAppt);
+                    } catch (Exception ex) {
+                        System.out.println("Error while editing appointment: " + ex);
+                        return;
+                    }
+                }
 
-            // Exiting and refreshing
-            appointmentTab.renderAppointments();
-            stage.close();
+                // Exiting and refreshing
+                appointmentTab.renderAppointments();
+                stage.close();
+            } catch (Exception ex) {
+                System.out.println("An unexpected error occurred: " + ex);
+            }
         });
 
-        btnCancel.setOnAction(e -> {stage.close();});
+        btnCancel.setOnAction(e -> {
+            stage.close();
+        });
     }
 
     @Override
@@ -186,5 +220,4 @@ public class FormAppointment extends Application {
         this.stage.setResizable(false);
         this.stage.show();
     }
-    
 }
