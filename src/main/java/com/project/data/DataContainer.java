@@ -1,11 +1,12 @@
 package com.project.data;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,43 +40,90 @@ public class DataContainer {
     /*
     * Task - 2 (Saveing and reading from file) is done below
     * by @Marmik Patel
+    * Saving and Loading
     */
     public static void saveAppointments() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("appointments.dat"))) {
-            oos.writeObject(appointments);
+        try (DataOutputStream dis = new DataOutputStream(new FileOutputStream("appointments.dat"))) {
+            for(Appointment appt : appointments){
+                AppointmentFileFormat apptFileFormat = new AppointmentFileFormat(appt);
+
+                dis.writeInt(apptFileFormat.getId());
+                dis.writeUTF(apptFileFormat.getTime());
+                dis.writeInt(apptFileFormat.getPatientId());
+                dis.writeUTF(apptFileFormat.getAgenda());
+                dis.writeUTF(apptFileFormat.getDoctor());
+            }
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }    
     }
 
     public static void savePatients() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("patients.dat"))) {
-            oos.writeObject(patients);
+        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream("patients.dat"))) {
+            for(Patient patient : patients){
+                dos.writeInt(patient.getId());
+                dos.writeUTF(patient.getName());
+                dos.writeInt(patient.getAge());
+                dos.writeInt(patient.getWeight());
+                dos.writeInt(patient.getHeight());
+                dos.writeLong(patient.getPhone());
+                dos.writeUTF(patient.getAddress());
+                dos.writeUTF(patient.getMedicalHistory());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void loadAppointments() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("appointments.dat"))) {
-            appointments = (ArrayList<Appointment>) ois.readObject();
+        appointments = new ArrayList<>();
+        try (DataInputStream dis = new DataInputStream(new FileInputStream("appointments.dat"))) {
+            while(true){
+                Appointment a = new Appointment(
+                    dis.readInt(), //id
+                    AppointmentFileFormat.getDateObject(dis.readUTF()), //date
+                    getPatientById(dis.readInt()), //patient
+                    dis.readUTF(), //agenda
+                    dis.readUTF() //doctor
+                );
+
+                appointments.add(a);
+            }
         } catch (FileNotFoundException e) {
             // File does not exist, initialize with empty list
             appointments = new ArrayList<>();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (EOFException e){
+            System.out.println("All data from appointments.dat is read");
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void loadPatients() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("patients.dat"))) {
-            patients = (ArrayList<Patient>) ois.readObject();
+        patients = new ArrayList<>();
+        try (DataInputStream dis = new DataInputStream(new FileInputStream("patients.dat"))) {
+            while(true){
+                Patient p = new Patient(
+                    dis.readInt(), //id
+                    dis.readUTF(), //name
+                    dis.readInt(), //age
+                    dis.readInt(), //weight
+                    dis.readInt(), //height
+                    dis.readLong(), //phone
+                    dis.readUTF(), //address
+                    dis.readUTF() //medical history
+                );
+
+                patients.add(p);
+            }
         } catch (FileNotFoundException e) {
             // File does not exist, initialize with empty list
             patients = new ArrayList<>();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (EOFException e){
+            System.out.println("All data from patients.dat is read");
+        } catch (IOException e) {
             e.printStackTrace();
-        }
+        } 
     }
     
     // For Patiends
@@ -93,7 +141,7 @@ public class DataContainer {
         Patient patient = new Patient(id, name, age, weight, height, phone, address, medicalHistory);
         patients.add(patient);
 
-        System.out.println("added new appointment");
+        System.out.println("added new patient");
     }
 
     public static boolean doesPatientExist(int patientId){
@@ -152,6 +200,8 @@ public class DataContainer {
     public static void addAppointment(int patientId, Date datetime, String agenda, String doctor){
         Appointment appt = new Appointment(getAppointments().size(), datetime, getPatientById(patientId), agenda, doctor);
         appointments.add(appt);
+
+        System.out.println("added new appointment");
     }
 
     public static String getTimeTillNext(){
