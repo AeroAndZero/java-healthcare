@@ -158,12 +158,13 @@ public class DataContainer {
         long timeDiff = Long.MAX_VALUE;
         Date current = new Date();
         for(Appointment p : appointments){
-            if(Math.abs(current.getTime() - p.datetime.getTime()) < timeDiff){
-                timeDiff = p.datetime.getTime() - current.getTime();
+            long diff = p.datetime.getTime() - current.getTime();
+            if(diff > 0 && diff < timeDiff){
+                timeDiff = diff;
             }
         }
     
-        if(timeDiff < 0) return "Never";
+        if(timeDiff == Long.MAX_VALUE) return "Never";
 
         long mins = (timeDiff / 60000);
         if(mins >= 60){
