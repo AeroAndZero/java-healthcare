@@ -198,7 +198,9 @@ public class DataContainer {
     }
 
     public static void addAppointment(int patientId, Date datetime, String agenda, String doctor){
-        Appointment appt = new Appointment(getAppointments().size(), datetime, getPatientById(patientId), agenda, doctor);
+        int id = 0;
+        if(appointments.size() > 0) id = appointments.get(appointments.size()-1).getId()+1;
+        Appointment appt = new Appointment(id, datetime, getPatientById(patientId), agenda, doctor);
         appointments.add(appt);
 
         System.out.println("added new appointment");
