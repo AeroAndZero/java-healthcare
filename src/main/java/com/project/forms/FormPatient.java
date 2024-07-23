@@ -1,5 +1,7 @@
 package com.project.forms;
 
+import java.util.regex.Pattern;
+
 import com.project.PatientTab;
 import com.project.classes.Patient;
 import com.project.components.FormHFields;
@@ -10,6 +12,8 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -18,9 +22,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class FormPatient extends Application{
+public class FormPatient extends Application {
     Patient patient;
-    
+
     Scene PatientRecord;
     Stage stage;
     PatientTab patientTab;
@@ -55,7 +59,6 @@ public class FormPatient extends Application{
     }
 
     public void buildGUI(){
-        
         hboxName = new FormHFields(
             new Label("Name: "),
             new TextField()
@@ -85,14 +88,12 @@ public class FormPatient extends Application{
             new Label("Address:"), 
             new TextArea()
         );
-        
 
         vboxMedicalHistory = new FormVFields(
             new Label("Medical History:"), 
             new TextArea()
         );
-        
-        
+
         btnCancel = new Button("Cancel");
         btnSave = new Button("Save");
         FormHFields formControls = new FormHFields(
@@ -102,7 +103,7 @@ public class FormPatient extends Application{
         formControls.setAlignment(Pos.CENTER_RIGHT);
 
         attachEvents();
-        
+
         // Main container
         VBox root = new VBox();
         root.getChildren().addAll(
@@ -134,7 +135,7 @@ public class FormPatient extends Application{
             ((TextArea)vboxMedicalHistory.control2).setText(patient.getMedicalHistoryProperty().get());
         }
     }
-    
+
     public void attachEvents(){
         /*
         * Task - 3 (Handling IOException) is done below
@@ -151,50 +152,69 @@ public class FormPatient extends Application{
                 String medicalHistory = ((TextArea)vboxMedicalHistory.control2).getText();
 
                 // Validation
-                if(name.trim().equals("")){
-                    System.out.println("Name should not be empty");
+                if(name.trim().isEmpty()){
+                    showErrorDialog("Invalid Input", "Name should not be empty");
+                    return;
+                }
+                if (!name.matches("[a-zA-Z\\s]+")) {
+                    showErrorDialog("Invalid Input", "Name should contain only alphabetic characters");
                     return;
                 }
 
                 try {
                     age = Integer.parseInt(((TextField)hboxAge.control2).getText());
+                    if (age <= 0) {
+                        showErrorDialog("Invalid Input", "Age must be a positive number.");
+                        return;
+                    }
                 } catch (NumberFormatException ex) {
-                    System.out.println("Invalid Age format. Enter a valid number: " + ex);
+                    showErrorDialog("Invalid Input", "Invalid Age format. Enter a valid number: " + ex.getMessage());
                     return;
                 }
 
                 try {
                     weight = Integer.parseInt(((TextField)hboxWeight.control2).getText());
+                    if (weight <= 0) {
+                        showErrorDialog("Invalid Input", "Weight must be a positive number.");
+                        return;
+                    }
                 } catch (NumberFormatException ex) {
-                    System.out.println("Invalid Weight format. Enter a valid number: " + ex);
+                    showErrorDialog("Invalid Input", "Invalid Weight format. Enter a valid number: " + ex.getMessage());
                     return;
                 }
 
                 try {
                     height = Integer.parseInt(((TextField)hboxHeight.control2).getText());
+                    if (height < 50 || height > 272) {
+                        showErrorDialog("Invalid Input", "Height must be between 50 and 272 cm.");
+                        return;
+                    }
                 } catch (NumberFormatException ex) {
-                    System.out.println("Invalid Height format. Enter a valid number: " + ex);
+                    showErrorDialog("Invalid Input", "Invalid Height format. Enter a valid number: " + ex.getMessage());
                     return;
                 }
 
-                try {
-                    phone = Long.parseLong(((TextField)hboxPhone.control2).getText());
-                } catch (NumberFormatException ex) {
-                    System.out.println("Invalid Phone format. Enter a valid number: " + ex);
+                // Phone validation: Canadian phone number format
+                String phoneText = ((TextField)hboxPhone.control2).getText();
+                if (!Pattern.matches("^[2-9]\\d{2}[2-9]\\d{2}\\d{4}$", phoneText)) {
+                    showErrorDialog("Invalid Input", "Invalid Phone format. Enter a valid Canadian phone number.");
                     return;
+                } else {
+                    phone = Long.parseLong(phoneText);
                 }
 
+                // Ensure required fields are not empty
                 if (name.isEmpty() || address.isEmpty() || medicalHistory.isEmpty()) {
-                    System.out.println("Please fill in all the required fields.");
+                    showErrorDialog("Invalid Input", "Please fill in all the required fields.");
                     return;
                 }
 
                 // Saving the patient
-                if(patient == null){
+                if (patient == null) {
                     try {
                         DataContainer.addPatient(name, age, weight, height, phone, address, medicalHistory);
                     } catch (Exception ex) {
-                        System.out.println("Error while adding patient: " + ex);
+                        showErrorDialog("Error", "Error while adding patient: " + ex.getMessage());
                         return;
                     }
                 } else {
@@ -202,7 +222,7 @@ public class FormPatient extends Application{
                         Patient newPatient = new Patient(patient.getId(), name, age, weight, height, phone, address, medicalHistory);
                         DataContainer.editPatient(patient.getId(), newPatient);
                     } catch (Exception ex) {
-                        System.out.println("Error while editing patient: " + ex);
+                        showErrorDialog("Error", "Error while editing patient: " + ex.getMessage());
                         return;
                     }
                 }
@@ -210,7 +230,7 @@ public class FormPatient extends Application{
                 patientTab.renderPatients();
                 stage.close();
             } catch (Exception ex) {
-                System.out.println("An unexpected error occurred: " + ex);
+                showErrorDialog("Unexpected Error", "An unexpected error occurred: " + ex.getMessage());
             }
         });
 
@@ -219,8 +239,17 @@ public class FormPatient extends Application{
         });
     }
 
+    private void showErrorDialog(String title, String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.initOwner(stage);  
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     @Override
-    public void start(Stage stage) {     
+    public void start(Stage stage) {
         this.stage = stage;
         this.stage.setAlwaysOnTop(true);
         this.stage.setScene(PatientRecord);

@@ -14,6 +14,8 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -57,7 +59,8 @@ public class FormAppointment extends Application {
         buildGUI();
     }
 
-    public void buildGUI(){
+    @SuppressWarnings("unchecked")
+	public void buildGUI(){
         hboxPatientID = new FormHFields(
             new Label("Patient ID:"),
             new TextField()
@@ -139,10 +142,10 @@ public class FormAppointment extends Application {
                         throw new Exception("Patient does not exist");
                     }
                 } catch (NumberFormatException ex) {
-                    System.out.println("Invalid patient ID: " + ex);
+                    showErrorDialog("Invalid Input", "Invalid patient ID: " + ex.getMessage());
                     return;
                 } catch (Exception ex){
-                    System.out.println("Patient with that ID does not exist: " +ex);
+                    showErrorDialog("Patient Not Found", "Patient with that ID does not exist: " + ex.getMessage());
                     return;
                 }
 
@@ -156,7 +159,13 @@ public class FormAppointment extends Application {
                 try {
                     datetime = format.parse(timeStr);
                 } catch (Exception ex) {
-                    System.out.println("Invalid time format. Time format should be hh:mm a: " + ex);
+                    showErrorDialog("Invalid Input", "Invalid time format. Time format should be hh:mm a: " + ex.getMessage());
+                    return;
+                }
+
+                // Check if the appointment date and time are not less than the current date and time
+                if (datetime.before(new Date())) {
+                    showErrorDialog("Invalid Input", "Appointment date and time cannot be in the past.");
                     return;
                 }
 
@@ -164,7 +173,7 @@ public class FormAppointment extends Application {
                 String agenda = ((TextArea)vboxAgenda.control2).getText();
 
                 if(agenda.trim().equals("")){
-                    System.out.println("Agenda should not be empty");
+                    showErrorDialog("Invalid Input", "Agenda should not be empty");
                     return;
                 }
 
@@ -175,13 +184,13 @@ public class FormAppointment extends Application {
                 if (appointment == null) {
                     try {
                         if (!DataContainer.doesPatientExist(patientId)) {
-                            System.out.println("Patient does not exist");
+                            showErrorDialog("Patient Not Found", "Patient does not exist");
                             return;
                         }
 
                         DataContainer.addAppointment(patientId, datetime, agenda, dr);
                     } catch (Exception ex) {
-                        System.out.println("Error while adding appointment: " + ex);
+                        showErrorDialog("Error", "Error while adding appointment: " + ex.getMessage());
                         return;
                     }
                 }
@@ -192,7 +201,7 @@ public class FormAppointment extends Application {
                         Appointment newAppt = new Appointment(appointment.getId(), datetime, DataContainer.getPatientById(patientId), agenda, dr);
                         DataContainer.editAppointment(appointment.getId(), newAppt);
                     } catch (Exception ex) {
-                        System.out.println("Error while editing appointment: " + ex);
+                        showErrorDialog("Error", "Error while editing appointment: " + ex.getMessage());
                         return;
                     }
                 }
@@ -201,13 +210,22 @@ public class FormAppointment extends Application {
                 appointmentTab.renderAppointments();
                 stage.close();
             } catch (Exception ex) {
-                System.out.println("An unexpected error occurred: " + ex);
+                showErrorDialog("Unexpected Error", "An unexpected error occurred: " + ex.getMessage());
             }
         });
 
         btnCancel.setOnAction(e -> {
             stage.close();
         });
+    }
+
+    private void showErrorDialog(String title, String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.initOwner(stage);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     @Override
