@@ -127,8 +127,6 @@ public class PatientTab extends Pane{
         for (Patient patient : DataContainer.getPatients()) {
             tablePatients.getItems().add(patient);
         }
-
-        DataContainer.savePatients();
     }
 
     public void addPatient(Patient p){

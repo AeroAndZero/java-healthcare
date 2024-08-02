@@ -1,9 +1,10 @@
 package com.project.classes;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+
+import com.project.formatter.CustomDateFormatter;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -26,11 +27,11 @@ public class Appointment{
     }
 
     public StringProperty getDateTimeProperty(){
-        return new ReadOnlyStringWrapper((new SimpleDateFormat("h:mm a dd/LLL/yyyy")).format(datetime));
+        return new ReadOnlyStringWrapper(CustomDateFormatter.getDateTimeStr(datetime));
     }
 
     public StringProperty getTimeProperty(){
-        return new ReadOnlyStringWrapper((new SimpleDateFormat("h:mm a")).format(datetime));
+        return new ReadOnlyStringWrapper(CustomDateFormatter.getTimeOnlyStr(datetime));
     }
 
     public ObservableObjectValue<LocalDate> getDateProperty(){

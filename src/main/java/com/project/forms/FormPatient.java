@@ -137,10 +137,6 @@ public class FormPatient extends Application {
     }
 
     public void attachEvents(){
-        /*
-        * Task - 3 (Handling IOException) is done below
-        * by @Hemang Patel
-        */
         btnSave.setOnAction(e -> {
             try {
                 String name = ((TextField)hboxName.control2).getText();
@@ -196,7 +192,7 @@ public class FormPatient extends Application {
 
                 // Phone validation: Canadian phone number format
                 String phoneText = ((TextField)hboxPhone.control2).getText();
-                if (!Pattern.matches("^[2-9]\\d{2}[2-9]\\d{2}\\d{4}$", phoneText)) {
+                if (!Pattern.matches("[0-9]{10}", phoneText)) {
                     showErrorDialog("Invalid Input", "Invalid Phone format. Enter a valid Canadian phone number.");
                     return;
                 } else {

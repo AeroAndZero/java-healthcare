@@ -7,6 +7,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 import com.project.data.DataContainer;
+import com.project.database.DatabaseManager;
 
 public class App extends Application {
     // Properties
@@ -25,6 +26,10 @@ public class App extends Application {
         this.stage.getIcons().add(appLogo);
         
         refreshState(0);
+
+        this.stage.setOnCloseRequest(e -> {
+            DatabaseManager.closeConnection();
+        });
     }
 
     public static void main(String[] args) {

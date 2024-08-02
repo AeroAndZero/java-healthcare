@@ -158,8 +158,6 @@ public class AppointmentTab extends Pane{
         for (Appointment appointment : DataContainer.getAppointments()) {
             tableAppointments.getItems().add(appointment);
         }
-
-        DataContainer.saveAppointments();
     }
 
 }

@@ -1,14 +1,15 @@
 package com.project.forms;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 
 import com.project.AppointmentTab;
 import com.project.classes.Appointment;
+import com.project.classes.Doctor;
 import com.project.components.FormHFields;
 import com.project.components.FormVFields;
 import com.project.data.DataContainer;
+import com.project.formatter.CustomDateFormatter;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -82,7 +83,7 @@ public class FormAppointment extends Application {
             new TextArea()
         );
 
-        ComboBox<String> cboxDoctor = new ComboBox<String>(DataContainer.getDoctorsProperty());
+        ComboBox<String> cboxDoctor = new ComboBox<String>(Doctor.getDoctorsProperty());
         cboxDoctor.getSelectionModel().select(0);
         vboxDoctor = new FormVFields(
             new Label("Assign doctor"),
@@ -128,10 +129,6 @@ public class FormAppointment extends Application {
     }
 
     public void attachEvents(){
-        /*
-        * Task - 3 (Handling IOException) is done below
-        * by @Hemang Patel
-        */
         btnSave.setOnAction(e -> {
             try {
                 // Patient ID
@@ -152,12 +149,15 @@ public class FormAppointment extends Application {
                 // Time and date field
                 String timeStr = ((TextField)vboxTime.control2).getText();
                 LocalDate localDate = ((DatePicker)vboxDate.control2).getValue();
-                timeStr += " " + localDate.getDayOfMonth() + "-" + localDate.getMonth() + "-" + localDate.getYear();
+                timeStr += " " + CustomDateFormatter.getDateOnlyStr(localDate);
 
-                SimpleDateFormat format = new SimpleDateFormat("hh:mm a dd-LLLL-yyyy");
+                
                 Date datetime = new Date();
                 try {
-                    datetime = format.parse(timeStr);
+                    datetime = CustomDateFormatter.getDate(timeStr, CustomDateFormatter.FULL_TIME_DATE);
+                    if(datetime == null){
+                        throw new Exception();
+                    }
                 } catch (Exception ex) {
                     showErrorDialog("Invalid Input", "Invalid time format. Time format should be hh:mm a: " + ex.getMessage());
                     return;
@@ -178,6 +178,7 @@ public class FormAppointment extends Application {
                 }
 
                 // Doctor Field
+                @SuppressWarnings("unchecked")
                 String dr = ((ComboBox<String>)vboxDoctor.control2).getValue();
 
                 // Saving if new
