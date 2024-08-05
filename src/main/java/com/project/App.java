@@ -42,20 +42,20 @@ public class App extends Application {
         this.stage.close();
 
         try{
-        switch (CURRENT_STATE) {
-            case 0:
-                Login login = new Login(this);
-                login.start(this.stage);
-                break;
-        
-            case 1:
-                Homescreen homescreen = new Homescreen();
-                homescreen.start(this.stage);
-                break;
+            switch (CURRENT_STATE) {
+                case 0:
+                    Login login = new Login(this);
+                    login.start(this.stage);
+                    break;
+            
+                case 1:
+                    Homescreen homescreen = new Homescreen();
+                    homescreen.start(this.stage);
+                    break;
 
-            default:
-                break;
-        }
+                default:
+                    break;
+            }
         }catch(Exception e){
             System.out.println("Failed to change state:");
             System.out.println(e);

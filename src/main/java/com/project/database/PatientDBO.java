@@ -46,7 +46,6 @@ public class PatientDBO extends DatabaseObject {
         this.patient = patient;
     }
 
-    
     public synchronized void getAllPatients(){
         ArrayList<Patient> patients = new ArrayList<>();
         
@@ -163,7 +162,6 @@ public class PatientDBO extends DatabaseObject {
         }
     }
 
-    //hemang
     public synchronized void deletePatient(int id){
         try{
             Connection conn = DatabaseManager.getConnection();
@@ -232,7 +230,6 @@ public class PatientDBO extends DatabaseObject {
                 break;
         }
     }
-    
     
     public void shutdown() {
     	executorService.shutdown();

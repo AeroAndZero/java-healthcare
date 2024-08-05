@@ -21,7 +21,6 @@ public class AppointmentDBO extends DatabaseObject {
     Appointment appointment = null;
     int id = 0;
 
-    
     ExecutorService executorService;
 
     public AppointmentDBO(){

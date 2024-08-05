@@ -151,7 +151,6 @@ public class FormAppointment extends Application {
                 LocalDate localDate = ((DatePicker)vboxDate.control2).getValue();
                 timeStr += " " + CustomDateFormatter.getDateOnlyStr(localDate);
 
-                
                 Date datetime = new Date();
                 try {
                     datetime = CustomDateFormatter.getDate(timeStr, CustomDateFormatter.FULL_TIME_DATE);
