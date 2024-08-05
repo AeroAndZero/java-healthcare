@@ -33,5 +33,9 @@ public class Homescreen extends Application {
         stage.setScene(Homescreen);
         stage.setTitle("Home - Java Healthcare");
         stage.show();
+
+        stage.setOnCloseRequest(e -> {
+            appointmentTab.onClose();
+        });
     }
 }

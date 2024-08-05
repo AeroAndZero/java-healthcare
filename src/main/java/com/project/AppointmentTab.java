@@ -7,6 +7,7 @@ import com.project.classes.Appointment;
 import com.project.components.TwoTextDisplay;
 import com.project.data.DataContainer;
 import com.project.forms.FormAppointment;
+import com.project.service.Clock;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,6 +26,7 @@ public class AppointmentTab extends Pane{
     public int HEIGHT = 576;
     public int PADDING = 40;
 
+    Clock clock;
     private TwoTextDisplay currentTime;
     private TwoTextDisplay nextIn;
     private TwoTextDisplay remaining;
@@ -34,6 +36,7 @@ public class AppointmentTab extends Pane{
     private Button btnAddAppt;
     private Button btnEditAppt;
     private Button btnDeleteAppt;
+    private Button btnRefresh;
     
     public AppointmentTab(){
         super();
@@ -45,11 +48,14 @@ public class AppointmentTab extends Pane{
 
     public void buildGUI(){
         // Info bar
-        HBox info = new HBox();
         nextIn = new TwoTextDisplay("Next in", "Never");
         remaining = new TwoTextDisplay("Remaining", "0");
         currentTime = new TwoTextDisplay("Current Time", LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")).toString());
-        info.setSpacing(100);
+        clock = new Clock(currentTime);
+        clock.start();
+        
+        HBox info = new HBox();
+        info.setSpacing(80);
         info.setPrefWidth(WIDTH - PADDING * 2);
         info.setAlignment(Pos.CENTER_RIGHT);
         info.getChildren().addAll(nextIn, remaining, currentTime);
@@ -68,7 +74,7 @@ public class AppointmentTab extends Pane{
         tableAppointments.getColumns().add(cTime);
         
         TableColumn<Appointment, Integer> cPatientID = new TableColumn<>("Patient ID");
-        cPatientID.setCellValueFactory(data -> data.getValue().patient.getIdProperty());
+        cPatientID.setCellValueFactory(data -> data.getValue().getPatient().getIdProperty());
         tableAppointments.getColumns().add(cPatientID);
 
         TableColumn<Appointment, String> cPatientName = new TableColumn<>("Patient Name");
@@ -96,8 +102,9 @@ public class AppointmentTab extends Pane{
         btnAddAppt = new Button("Add Appointment");
         btnEditAppt = new Button("Edit");
         btnDeleteAppt = new Button("Delete");
+        btnRefresh = new Button("Refresh");
         dataControls.setSpacing(10);
-        dataControls.getChildren().addAll(btnAddAppt, btnEditAppt, btnDeleteAppt);
+        dataControls.getChildren().addAll(btnAddAppt, btnEditAppt, btnDeleteAppt, btnRefresh);
 
         // Attaching event listeners to the buttons
         attachEvents();
@@ -116,10 +123,6 @@ public class AppointmentTab extends Pane{
     }
 
     public void refreshEveryMove(){
-        // The current time is being updated every time the mouse is moved
-        // This is because multi-threading has not been taught yet.
-        currentTime.setSubtitle(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")).toString());
-
         remaining.setSubtitle(DataContainer.getAppointments().size() + "");
         nextIn.setSubtitle(DataContainer.getTimeTillNext());
     }
@@ -148,6 +151,14 @@ public class AppointmentTab extends Pane{
 
             renderAppointments();
         });
+
+        btnRefresh.setOnAction(e -> {
+            renderAppointments();
+        });
+    }
+
+    public void onClose(){
+        clock.stop();
     }
 
     public void renderAppointments(){
@@ -155,8 +166,10 @@ public class AppointmentTab extends Pane{
         tableAppointments.getItems().clear();
 
         // Add all
-        for (Appointment appointment : DataContainer.getAppointments()) {
-            tableAppointments.getItems().add(appointment);
+        if(DataContainer.getAppointments() != null && DataContainer.getPatients() != null){
+            for (Appointment appointment : DataContainer.getAppointments()) {
+                tableAppointments.getItems().add(appointment);
+            }
         }
     }
 

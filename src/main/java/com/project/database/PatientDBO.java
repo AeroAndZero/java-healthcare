@@ -3,17 +3,43 @@ package com.project.database;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.project.classes.DatabaseObject;
 import com.project.classes.Patient;
+import com.project.data.DataContainer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PatientDBO {
+public class PatientDBO extends DatabaseObject {
+    OPERATION CURRENT_OPERATION;
+    Patient patient = null;
+    int id = 0;
 
-    public static ArrayList<Patient> getAllPatients(){
+    public void setOperation(OPERATION operation){
+        CURRENT_OPERATION = operation;
+    }
+
+    public void setOperation(OPERATION operation, Patient patient){
+        CURRENT_OPERATION = operation;
+        this.patient = patient;
+    }
+
+    public void setOperation(OPERATION operation, int id){
+        CURRENT_OPERATION = operation;
+        this.id = id;
+    }
+
+    public void setOperation(OPERATION operation, int id, Patient patient){
+        CURRENT_OPERATION = operation;
+        this.id = id;
+        this.patient = patient;
+    }
+
+    public void getAllPatients(){
         ArrayList<Patient> patients = new ArrayList<>();
+        
         try{
             Connection conn = DatabaseManager.getConnection();
             String query = "select * from patients";
@@ -39,10 +65,13 @@ public class PatientDBO {
             e.printStackTrace();
         }
 
-        return patients;
+        if(patients.size() > 0){
+            DataContainer.patients = patients;
+            System.out.println("Patients have been loaded");
+        }
     }
 
-    public static boolean addPatient(Patient patient){
+    public void addPatient(Patient patient){
         try{
             Connection conn = DatabaseManager.getConnection();
             
@@ -60,17 +89,17 @@ public class PatientDBO {
             int result = statement.executeUpdate();
 
             System.out.println("Patient added to database: " + result);
-            return true;
+            
+            DataContainer.patients.add(patient);
         }catch(SQLException e){
             System.out.println("failed to add patients to database: " + e.getMessage());
         }catch(Exception e){
             System.out.println("[!] PatientDBO:addPatient() > Encountered unknown error");
             e.printStackTrace();
         }
-        return false;
     }
 
-    public static boolean updatePatient(int id, Patient patient){
+    public void editPatient(int id, Patient patient){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -97,17 +126,26 @@ public class PatientDBO {
             int result = statement.executeUpdate();
 
             System.out.println("Patient update to database: " + result);
-            return true;
+            
+            int i = -1;
+            for(int j = 0; j < DataContainer.patients.size(); j++){
+                if(DataContainer.patients.get(j).getId() == id){
+                    i = j;
+                    break;
+                }
+            }
+
+            if(i != -1)
+                DataContainer.patients.set(i, patient);
         }catch(SQLException e){
             System.out.println("failed to update patients to database: " + e.getMessage());
         }catch(Exception e){
             System.out.println("[!] PatientDBO:updatePatient() > Encountered unknown error");
             e.printStackTrace();
         }
-        return false;
     }
 
-    public static boolean deletePatient(int id){
+    public void deletePatient(int id){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -121,14 +159,52 @@ public class PatientDBO {
 
             System.out.println("Patient deleted from database: " + result);
             
-            return true;
+            Patient i = null;
+            for(Patient p : DataContainer.patients){
+                if(p.getId() == id){
+                    i = p;
+                    break;
+                }
+            }
+
+            if(i != null)
+                DataContainer.patients.remove(i);
         }catch(SQLException e){
             System.out.println("failed to remove patient from database: " + e.getMessage());
         }catch(Exception e){
             System.out.println("[!] PatientDBO:deletePatient() > Encountered unknown error");
             e.printStackTrace();
         }
+    }
 
-        return false;
+    @Override
+    public void execute() {
+        this.start();
+    }
+
+    @Override
+    public void run() {
+        switch (CURRENT_OPERATION) {
+            case GET:
+                getAllPatients();
+                DataContainer.loadAppointments();
+                break;
+
+            case ADD:
+                addPatient(patient);
+                break;
+            
+            case EDIT:
+                editPatient(id, patient);
+                break;
+            
+            case DELETE:
+                deletePatient(id);
+                break;
+        
+            default:
+                break;
+        }
+
     }
 }

@@ -5,50 +5,26 @@ import java.util.Date;
 
 import com.project.classes.Appointment;
 import com.project.classes.Patient;
+import com.project.classes.DatabaseObject;
 import com.project.database.AppointmentDBO;
 import com.project.database.PatientDBO;
 import com.project.formatter.CustomDateFormatter;
 
 public class DataContainer {
-    static ArrayList<Patient> patients;
-    static ArrayList<Appointment> appointments;
+    public static ArrayList<Patient> patients;
+    public static ArrayList<Appointment> appointments;
 
     public DataContainer(){
         patients = new ArrayList<>();
         appointments = new ArrayList<>();
 
-        // Load data from files
-        loadPatients();
-        loadAppointments();
-    }
-
-    public static void loadAppointments() {
-        appointments = AppointmentDBO.getAllAppointments();
-    }
-
-    public static void loadPatients() {
-        patients = PatientDBO.getAllPatients();
+        // Load data from database
+        loadPatients(); // first patients are loaded. Then loadAppointments is called
     }
     
-    // For Patiends
+    // --------------- For Patiends
     public static ArrayList<Patient> getPatients(){
         return patients;
-    }
-
-    public static void addPatient(Patient patient){
-        if(PatientDBO.addPatient(patient)){
-            patients.add(patient);
-        }
-    }
-
-    public static void addPatient(String name, int age, int weight, int height, long phone, String address, String medicalHistory){
-        int id = 0;
-        if(patients.size() > 0) id = patients.get(patients.size()-1).getId()+1;
-        Patient patient = new Patient(id, name, age, weight, height, phone, address, medicalHistory);
-
-        if(PatientDBO.addPatient(patient)){
-            patients.add(patient);
-        }
     }
 
     public static boolean doesPatientExist(int patientId){
@@ -71,78 +47,65 @@ public class DataContainer {
         return null;
     }
 
+    public static void loadPatients() {
+        PatientDBO patientDBO = new PatientDBO();
+        patientDBO.setOperation(DatabaseObject.OPERATION.GET);
+        patientDBO.execute();
+    }
+
+    public static void addPatient(String name, int age, int weight, int height, long phone, String address, String medicalHistory){
+        int id = 0;
+        if(patients.size() > 0) id = patients.get(patients.size()-1).getId()+1;
+        Patient patient = new Patient(id, name, age, weight, height, phone, address, medicalHistory);
+
+        PatientDBO patientDBO = new PatientDBO();
+        patientDBO.setOperation(DatabaseObject.OPERATION.ADD, patient);
+        patientDBO.execute();
+    }
+
     public static void editPatient(int id, Patient patient){
-        int i = 0;
-        for(int j = 0; j < patients.size(); j++){
-            if(patients.get(j).getId() == id){
-                i = j;
-                break;
-            }
-        }
-        
-        if(PatientDBO.updatePatient(i, patient)){
-            patients.set(i, patient);
-        }
+        PatientDBO patientDBO = new PatientDBO();
+        patientDBO.setOperation(DatabaseObject.OPERATION.EDIT, id, patient);
+        patientDBO.execute();
     }
 
     public static void deletePatient(int id){
-        Patient i = null;
-        for(Patient p : patients){
-            if(p.getId() == id){
-                i = p;
-                break;
-            }
-        }
-
-        if(i != null)
-        {
-            if(PatientDBO.deletePatient(id)){
-                patients.remove(i);
-            }
-        }
+        PatientDBO patientDBO = new PatientDBO();
+        patientDBO.setOperation(DatabaseObject.OPERATION.DELETE, id);
+        patientDBO.execute();
     }
 
-    // For Appointments
+    // --------------- For Appointments
     public static ArrayList<Appointment> getAppointments(){
         return appointments;
     }
 
-    public static void addAppointment(Appointment appointment){
-        if(AppointmentDBO.addAppointment(appointment)){
-            appointments.add(appointment);
-        }
+    public static void loadAppointments() {
+        AppointmentDBO appointmentDBO = new AppointmentDBO();
+        appointmentDBO.setOperation(DatabaseObject.OPERATION.GET);
+        appointmentDBO.execute();
     }
 
     public static void addAppointment(int patientId, Date datetime, String agenda, String doctor){
         int id = 0;
         if(appointments.size() > 0) id = appointments.get(appointments.size()-1).getId()+1;
         Appointment appt = new Appointment(id, datetime, getPatientById(patientId), agenda, doctor);
-        
-        if(AppointmentDBO.addAppointment(appt)){
-            appointments.add(appt);
-        }
+
+        AppointmentDBO appointmentDBO = new AppointmentDBO();
+        appointmentDBO.setOperation(DatabaseObject.OPERATION.ADD, appt);
+        appointmentDBO.execute();
     }
 
     public static void editAppointment(int id, Appointment apt){
-        if(AppointmentDBO.editAppointment(id, apt)){
-            appointments.set(id, apt);
-        }
+        AppointmentDBO appointmentDBO = new AppointmentDBO();
+        appointmentDBO.setOperation(DatabaseObject.OPERATION.EDIT, id, apt);
+        appointmentDBO.execute();
     }
 
     public static void deleteAppointment(int id){
-        Appointment i = null;
-        for(Appointment a : appointments){
-            if(a.getId() == id){
-                i = a;
-                break;
-            }
-        }
-
-        if(i != null){
-            if(AppointmentDBO.deleteAppointment(id)){
-                appointments.remove(i);
-            }
-        }
+        AppointmentDBO appointmentDBO = new AppointmentDBO();
+        appointmentDBO.setOperation(DatabaseObject.OPERATION.DELETE, id);
+        appointmentDBO.execute();
     }
 
     // For others

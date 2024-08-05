@@ -34,4 +34,12 @@ public class TwoTextDisplay extends VBox{
     public void setSubtitle(String text){
         lSubtitle.setText(text);
     }
+
+    public Label getTitleLabel(){
+        return lTitle;
+    }
+
+    public Label getSubtitleLabel(){
+        return lSubtitle;                                          
+    }
 }

@@ -23,6 +23,7 @@ public class PatientTab extends Pane{
     private Button btnAddPatient;
     private Button btnEditPatient;
     private Button btnDeletePatient;
+    private Button btnRefresh;
 
     TableView<Patient> tablePatients;
 
@@ -84,8 +85,9 @@ public class PatientTab extends Pane{
         btnAddPatient = new Button("Add Patient");
         btnEditPatient = new Button("Edit");
         btnDeletePatient = new Button("Delete");
+        btnRefresh = new Button("Refresh");
         dataControls.setSpacing(10);
-        dataControls.getChildren().addAll(btnAddPatient, btnEditPatient, btnDeletePatient);
+        dataControls.getChildren().addAll(btnAddPatient, btnEditPatient, btnDeletePatient, btnRefresh);
 
         // Attaching events to data controls
         attachEvents();
@@ -117,6 +119,10 @@ public class PatientTab extends Pane{
             DataContainer.deletePatient(selected.getId());
             renderPatients();
         });
+
+        btnRefresh.setOnAction(e -> {
+            renderPatients();
+        });
     }
 
     public void renderPatients(){
@@ -124,12 +130,10 @@ public class PatientTab extends Pane{
         tablePatients.getItems().clear();
 
         // Add all
-        for (Patient patient : DataContainer.getPatients()) {
-            tablePatients.getItems().add(patient);
+        if(DataContainer.getPatients() != null){
+            for (Patient patient : DataContainer.getPatients()) {
+                tablePatients.getItems().add(patient);
+            }
         }
-    }
-
-    public void addPatient(Patient p){
-        
     }
 }
