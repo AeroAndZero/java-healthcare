@@ -16,7 +16,7 @@ public class Clock implements Runnable {
 
     public Clock(TwoTextDisplay ttd){
         this.ttd = ttd;
-        executorService = Executors.newCachedThreadPool();
+        this.executorService = Executors.newCachedThreadPool();
     }
 
     public void tick(){
@@ -52,6 +52,7 @@ public class Clock implements Runnable {
         isTicking = false;
         executorService.shutdown();
         System.out.println("Clock stopped working");
+        
     }
 
     @Override

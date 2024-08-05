@@ -22,27 +22,27 @@ public class AppointmentDBO extends DatabaseObject {
     int id = 0;
 
     
-   private final ExecutorService executorService;
+    ExecutorService executorService;
 
     public AppointmentDBO(){
         executorService = Executors.newCachedThreadPool();
     }
 
-    public void setOperation(OPERATION operation){
+    public synchronized void setOperation(OPERATION operation){
         CURRENT_OPERATION = operation;
     }
 
-    public void setOperation(OPERATION operation, Appointment appointment){
+    public synchronized void setOperation(OPERATION operation, Appointment appointment){
         CURRENT_OPERATION = operation;
         this.appointment = appointment;
     }
 
-    public void setOperation(OPERATION operation, int id){
+    public synchronized void setOperation(OPERATION operation, int id){
         CURRENT_OPERATION = operation;
         this.id = id;
     }
 
-    public void setOperation(OPERATION operation, int id, Appointment appointment){
+    public synchronized void setOperation(OPERATION operation, int id, Appointment appointment){
         CURRENT_OPERATION = operation;
         this.id = id;
         this.appointment = appointment;
@@ -184,7 +184,7 @@ public class AppointmentDBO extends DatabaseObject {
         }
     }
 
-    public void execute(){
+    public synchronized void execute(){
         try {
             executorService.execute(this);
         } catch (RejectedExecutionException ex) {
@@ -218,6 +218,6 @@ public class AppointmentDBO extends DatabaseObject {
    
     public void shutdown() {
     	executorService.shutdown();
-    	System.out.println("service shutdown");
+    	System.out.println("Service shutdown");
     }
 }

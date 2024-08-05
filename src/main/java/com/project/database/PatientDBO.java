@@ -16,11 +16,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PatientDBO extends DatabaseObject {
-    OPERATION CURRENT_OPERATION;
-    Patient patient = null;
-    int id = 0;
+   OPERATION CURRENT_OPERATION;
+   Patient patient = null;
+   int id = 0;
 
- private final ExecutorService executorService;
+   ExecutorService executorService;
 
     public PatientDBO(){
         executorService = Executors.newCachedThreadPool();
@@ -46,7 +46,7 @@ public class PatientDBO extends DatabaseObject {
         this.patient = patient;
     }
 
-    //hemang
+    
     public synchronized void getAllPatients(){
         ArrayList<Patient> patients = new ArrayList<>();
         
