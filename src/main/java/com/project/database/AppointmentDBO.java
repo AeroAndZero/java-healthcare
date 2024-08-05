@@ -6,6 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import com.project.classes.Appointment;
 import com.project.classes.DatabaseObject;
@@ -13,10 +16,17 @@ import com.project.classes.Patient;
 import com.project.data.DataContainer;
 import com.project.formatter.CustomDateFormatter;
 
-public class AppointmentDBO extends DatabaseObject{
+public class AppointmentDBO extends DatabaseObject {
     public OPERATION CURRENT_OPERATION;
     Appointment appointment = null;
     int id = 0;
+
+    
+   private final ExecutorService executorService;
+
+    public AppointmentDBO(){
+        executorService = Executors.newCachedThreadPool();
+    }
 
     public void setOperation(OPERATION operation){
         CURRENT_OPERATION = operation;
@@ -38,7 +48,7 @@ public class AppointmentDBO extends DatabaseObject{
         this.appointment = appointment;
     }
 
-    public void getAllAppointments(){
+    public synchronized void getAllAppointments(){
         ArrayList<Appointment> appointments = new ArrayList<>();
 
         try{
@@ -67,12 +77,14 @@ public class AppointmentDBO extends DatabaseObject{
         }
 
         if(appointments.size() > 0){
+        synchronized (DataContainer.appointments) {
             DataContainer.appointments = appointments;
+        }
             System.out.println("Appointments have been loaded");
         }
     }
 
-    public void addAppointment(Appointment appointment){
+    public synchronized void addAppointment(Appointment appointment){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -86,7 +98,10 @@ public class AppointmentDBO extends DatabaseObject{
 
             System.out.println("Appointment added to database: " + result);
             
-            DataContainer.appointments.add(appointment);
+           
+            synchronized (DataContainer.appointments) {
+            	DataContainer.appointments.add(appointment);
+            }
         }catch(SQLException e){
             System.out.println("failed to add appointment to database: " + e.getMessage());
         }catch(Exception e){
@@ -95,7 +110,7 @@ public class AppointmentDBO extends DatabaseObject{
         }
     }
 
-    public void editAppointment(int appointmentId, Appointment appointment){
+    public synchronized void editAppointment(int appointmentId, Appointment appointment){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -115,16 +130,18 @@ public class AppointmentDBO extends DatabaseObject{
 
             System.out.println("Appointment updated to database: " + result);
             
-            int i = -1;
-            for(int j = 0; j < DataContainer.appointments.size(); j++){
-                if(DataContainer.appointments.get(j).getId() == id){
-                    i = j;
-                    break;
+            synchronized (DataContainer.appointments) {
+            	int i = -1;
+                for(int j = 0; j < DataContainer.appointments.size(); j++){
+                    if(DataContainer.appointments.get(j).getId() == id){
+                        i = j;
+                        break;
+                    }
                 }
-            }
-
-            if(i != -1)
+            if(i != -1) {
                 DataContainer.appointments.set(i, appointment);
+            }
+           }
         }catch(SQLException e){
             System.out.println("failed to update appointment to database: " + e.getMessage());
         }catch(Exception e){
@@ -133,7 +150,7 @@ public class AppointmentDBO extends DatabaseObject{
         }
     }
 
-    public void deleteAppointment(int id){
+    public synchronized void deleteAppointment(int id){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -145,7 +162,8 @@ public class AppointmentDBO extends DatabaseObject{
 
             System.out.println("Appointment removed from database: " + result);
             
-            Appointment i = null;
+           synchronized(DataContainer.appointments) {
+        	   Appointment i = null;
             for(Appointment a : DataContainer.appointments){
                 if(a.getId() == id){
                     i = a;
@@ -153,9 +171,12 @@ public class AppointmentDBO extends DatabaseObject{
                 }
             }
 
-            if(i != null)
+            if(i != null) {
+            
                 DataContainer.appointments.remove(i);
-        }catch(SQLException e){
+            }
+        }
+    }catch(SQLException e){
             System.out.println("failed to remove appointment to database: " + e.getMessage());
         }catch(Exception e){
             System.out.println("[!] AppointmentDBO:deleteAppointment() > Encountered unknown error");
@@ -164,7 +185,11 @@ public class AppointmentDBO extends DatabaseObject{
     }
 
     public void execute(){
-        this.start();
+        try {
+            executorService.execute(this);
+        } catch (RejectedExecutionException ex) {
+            System.out.println("\nYou cannot execute any new Task"); 
+        }
     }
     
     @Override
@@ -189,5 +214,10 @@ public class AppointmentDBO extends DatabaseObject{
             default:
                 break;
         }
+    }
+   
+    public void shutdown() {
+    	executorService.shutdown();
+    	System.out.println("service shutdown");
     }
 }

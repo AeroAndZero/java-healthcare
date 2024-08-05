@@ -2,6 +2,9 @@ package com.project.database;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import com.project.classes.DatabaseObject;
 import com.project.classes.Patient;
@@ -17,27 +20,34 @@ public class PatientDBO extends DatabaseObject {
     Patient patient = null;
     int id = 0;
 
-    public void setOperation(OPERATION operation){
+ private final ExecutorService executorService;
+
+    public PatientDBO(){
+        executorService = Executors.newCachedThreadPool();
+    }
+
+    public synchronized void setOperation(OPERATION operation){
         CURRENT_OPERATION = operation;
     }
 
-    public void setOperation(OPERATION operation, Patient patient){
+    public synchronized void setOperation(OPERATION operation, Patient patient){
         CURRENT_OPERATION = operation;
         this.patient = patient;
     }
 
-    public void setOperation(OPERATION operation, int id){
+    public synchronized void setOperation(OPERATION operation, int id){
         CURRENT_OPERATION = operation;
         this.id = id;
     }
 
-    public void setOperation(OPERATION operation, int id, Patient patient){
+    public synchronized void setOperation(OPERATION operation, int id, Patient patient){
         CURRENT_OPERATION = operation;
         this.id = id;
         this.patient = patient;
     }
 
-    public void getAllPatients(){
+    //hemang
+    public synchronized void getAllPatients(){
         ArrayList<Patient> patients = new ArrayList<>();
         
         try{
@@ -66,12 +76,14 @@ public class PatientDBO extends DatabaseObject {
         }
 
         if(patients.size() > 0){
-            DataContainer.patients = patients;
+        	synchronized (DataContainer.patients) {
+                DataContainer.patients = patients;
+        	}
             System.out.println("Patients have been loaded");
         }
     }
 
-    public void addPatient(Patient patient){
+    public synchronized void addPatient(Patient patient){
         try{
             Connection conn = DatabaseManager.getConnection();
             
@@ -90,7 +102,9 @@ public class PatientDBO extends DatabaseObject {
 
             System.out.println("Patient added to database: " + result);
             
-            DataContainer.patients.add(patient);
+           synchronized (DataContainer.patients) {
+               DataContainer.patients.add(patient);
+           }
         }catch(SQLException e){
             System.out.println("failed to add patients to database: " + e.getMessage());
         }catch(Exception e){
@@ -99,7 +113,7 @@ public class PatientDBO extends DatabaseObject {
         }
     }
 
-    public void editPatient(int id, Patient patient){
+    public synchronized void editPatient(int id, Patient patient){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -127,7 +141,8 @@ public class PatientDBO extends DatabaseObject {
 
             System.out.println("Patient update to database: " + result);
             
-            int i = -1;
+         synchronized (DataContainer.patients) {
+        	 int i = -1;
             for(int j = 0; j < DataContainer.patients.size(); j++){
                 if(DataContainer.patients.get(j).getId() == id){
                     i = j;
@@ -135,8 +150,11 @@ public class PatientDBO extends DatabaseObject {
                 }
             }
 
-            if(i != -1)
+            if(i != -1) 
+            {
                 DataContainer.patients.set(i, patient);
+            }
+         }
         }catch(SQLException e){
             System.out.println("failed to update patients to database: " + e.getMessage());
         }catch(Exception e){
@@ -145,7 +163,8 @@ public class PatientDBO extends DatabaseObject {
         }
     }
 
-    public void deletePatient(int id){
+    //hemang
+    public synchronized void deletePatient(int id){
         try{
             Connection conn = DatabaseManager.getConnection();
 
@@ -158,7 +177,7 @@ public class PatientDBO extends DatabaseObject {
             int result = statement.executeUpdate();
 
             System.out.println("Patient deleted from database: " + result);
-            
+       synchronized (DataContainer.patients) {
             Patient i = null;
             for(Patient p : DataContainer.patients){
                 if(p.getId() == id){
@@ -167,9 +186,12 @@ public class PatientDBO extends DatabaseObject {
                 }
             }
 
-            if(i != null)
+            if(i != null) {
                 DataContainer.patients.remove(i);
-        }catch(SQLException e){
+        }
+       }
+      }
+        catch(SQLException e){
             System.out.println("failed to remove patient from database: " + e.getMessage());
         }catch(Exception e){
             System.out.println("[!] PatientDBO:deletePatient() > Encountered unknown error");
@@ -179,7 +201,11 @@ public class PatientDBO extends DatabaseObject {
 
     @Override
     public void execute() {
-        this.start();
+        try {
+            executorService.execute(this);
+        } catch (RejectedExecutionException ex) {
+            System.out.println("\nYou cannot execute any new Task"); 
+        }
     }
 
     @Override
@@ -205,6 +231,12 @@ public class PatientDBO extends DatabaseObject {
             default:
                 break;
         }
-
     }
+    
+    
+    public void shutdown() {
+    	executorService.shutdown();
+    	System.out.println("Service shutdown");
+    }
+    
 }
